@@ -66,3 +66,22 @@ def read_db(db_file: BinaryIO) -> None:
         }
 
         table["header"] = header
+
+    for table in output["tables"]:
+        table["fields"] = []
+        position = table["header"]["field_start"]
+        end = position + TABLE_FIELD_SIZE
+
+        for _ in range(table["header"]["num_fields"]):
+            field_data = table_data[position : position + TABLE_FIELD_SIZE]
+
+            field = {
+                "type": ncaadb.hex.read_dword(3, field_data),
+                "offset": ncaadb.hex.read_dword(7, field_data),
+                "name": ncaadb.hex.read_text(11, 4, field_data),
+                "bits": ncaadb.hex.read_dword(15, field_data),
+                "records": [],
+            }
+
+            table["fields"].append(field)
+            position += TABLE_FIELD_SIZE
