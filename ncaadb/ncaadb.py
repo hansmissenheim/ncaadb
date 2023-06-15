@@ -39,3 +39,30 @@ def read_db(db_file: BinaryIO) -> None:
         output["tables"].append(table)
 
         position += TABLE_DEFINITION_SIZE
+
+    header_start = position
+    output["headers"]["data_start"] = header_start + FILE_HEADER_SIZE
+    for table in output["tables"]:
+        position = header_start + table["definition"]["offset"]
+        end = position + TABLE_HEADER_SIZE
+        table_header = table_data[position:end]
+
+        header = {
+            "prior_crc": ncaadb.hex.read_dword(3, table_header),
+            "unknown_2": ncaadb.hex.read_dword(7, table_header),
+            "len_bytes": ncaadb.hex.read_dword(11, table_header),
+            "len_bits": ncaadb.hex.read_dword(15, table_header),
+            "zero": ncaadb.hex.read_dword(19, table_header),
+            "max_records": ncaadb.hex.read_word(21, table_header),
+            "current_records": ncaadb.hex.read_word(23, table_header),
+            "unknown_3": ncaadb.hex.read_dword(27, table_header),
+            "num_fields": table_header[28],
+            "index_count": table_header[29],
+            "zero_2": ncaadb.hex.read_word(31, table_header),
+            "zero_3": ncaadb.hex.read_dword(35, table_header),
+            "header_crc": ncaadb.hex.read_dword(39, table_header),
+            "field_start": end,
+            "data_start": end + table_header[28] * TABLE_FIELD_SIZE,
+        }
+
+        table["header"] = header
