@@ -1,4 +1,5 @@
-from typing import BinaryIO
+import math
+from typing import Any, BinaryIO
 
 import ncaadb.hex
 
@@ -8,11 +9,14 @@ TABLE_DEFINITION_SIZE = 8
 TABLE_FIELD_SIZE = 16
 
 
-def read_db(db_file: BinaryIO) -> None:
+def read_db(db_file: BinaryIO) -> dict[str, Any]:
     """Read an NCAA DB file into python-readable data.
 
     Args:
         db_file (BinaryIO): NCAA DB file
+
+    Returns:
+        dict[str, Any]: Dictionary containing file headers and table data
     """
     data = db_file.read()
     file_header = data[:FILE_HEADER_SIZE]
@@ -85,3 +89,37 @@ def read_db(db_file: BinaryIO) -> None:
 
             table["fields"].append(field)
             position += TABLE_FIELD_SIZE
+
+    for table in output["tables"]:
+        data_start = table["header"]["data_start"]
+        len_bytes = table["header"]["len_bytes"]
+        records = table["header"]["current_records"]
+
+        for field in table["fields"]:
+            for i in range(records):
+                position = data_start + i * len_bytes
+                end = position + len_bytes
+                record_data = table_data[position:end]
+
+                value = None
+                match field["type"]:
+                    case 0:
+                        value = ncaadb.hex.read_string(record_data, field)
+                    case 1:
+                        value = ncaadb.hex.read_bytes(record_data, field)
+                    case 2 | 3 | 4:
+                        arr = [
+                            *record_data[
+                                math.floor(field["offset"] / 8) : math.ceil(
+                                    (field["bits"] + field["offset"]) / 8
+                                )
+                            ]
+                        ]
+                        bit_list = [ncaadb.hex.bit_array(byte) for byte in arr]
+                        all_bits = [item for sublist in bit_list for item in sublist]
+                        value = ncaadb.hex.read_bits(
+                            all_bits, field["offset"] % 8, field["bits"]
+                        )
+
+                field["records"].append({"value": value, "record_number": i})
+    return output
