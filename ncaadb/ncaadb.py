@@ -22,21 +22,21 @@ def read_db(db_file: BinaryIO) -> dict[str, Any]:
     file_header = data[:FILE_HEADER_SIZE]
 
     headers = {
-        "digit": ncaadb.hex.read_word(1, file_header),
-        "version": ncaadb.hex.read_word(3, file_header),
-        "unknown_1": ncaadb.hex.read_dword(7, file_header),
-        "db_size": ncaadb.hex.read_dword(11, file_header),
-        "zero": ncaadb.hex.read_dword(15, file_header),
-        "table_count": ncaadb.hex.read_dword(19, file_header),
-        "unknown_2": ncaadb.hex.read_dword(23, file_header),
+        "digit": int.from_bytes(file_header[0:2]),
+        "version": int.from_bytes(file_header[2:4]),
+        "unknown_1": int.from_bytes(file_header[4:8]),
+        "db_size": int.from_bytes(file_header[8:12]),
+        "zero": int.from_bytes(file_header[12:16]),
+        "table_count": int.from_bytes(file_header[16:20]),
+        "unknown_2": int.from_bytes(file_header[20:24]),
     }
     output = {"headers": headers, "tables": []}
 
     position = 0
     table_data = data[FILE_HEADER_SIZE:]
     for _ in range(headers["table_count"]):
-        name = ncaadb.hex.read_text(position + 3, 4, table_data)
-        offset = ncaadb.hex.read_dword(position + 7, table_data)
+        name = table_data[position : position + 4].decode()[::-1]
+        offset = int.from_bytes(table_data[position + 4 : position + 8])
 
         definition = {"name": name, "offset": offset}
         table = {"definition": definition}
@@ -52,19 +52,19 @@ def read_db(db_file: BinaryIO) -> dict[str, Any]:
         table_header = table_data[position:end]
 
         header = {
-            "prior_crc": ncaadb.hex.read_dword(3, table_header),
-            "unknown_2": ncaadb.hex.read_dword(7, table_header),
-            "len_bytes": ncaadb.hex.read_dword(11, table_header),
-            "len_bits": ncaadb.hex.read_dword(15, table_header),
-            "zero": ncaadb.hex.read_dword(19, table_header),
-            "max_records": ncaadb.hex.read_word(21, table_header),
-            "current_records": ncaadb.hex.read_word(23, table_header),
-            "unknown_3": ncaadb.hex.read_dword(27, table_header),
+            "prior_crc": int.from_bytes(table_header[0:4]),
+            "unknown_2": int.from_bytes(table_header[4:8]),
+            "len_bytes": int.from_bytes(table_header[8:12]),
+            "len_bits": int.from_bytes(table_header[12:16]),
+            "zero": int.from_bytes(table_header[16:20]),
+            "max_records": int.from_bytes(table_header[20:22]),
+            "current_records": int.from_bytes(table_header[22:24]),
+            "unknown_3": int.from_bytes(table_header[24:28]),
             "num_fields": table_header[28],
             "index_count": table_header[29],
-            "zero_2": ncaadb.hex.read_word(31, table_header),
-            "zero_3": ncaadb.hex.read_dword(35, table_header),
-            "header_crc": ncaadb.hex.read_dword(39, table_header),
+            "zero_2": int.from_bytes(file_header[30:32]),
+            "zero_3": int.from_bytes(table_header[32:36]),
+            "header_crc": int.from_bytes(table_header[36:40]),
             "field_start": end,
             "data_start": end + table_header[28] * TABLE_FIELD_SIZE,
         }
@@ -80,10 +80,10 @@ def read_db(db_file: BinaryIO) -> dict[str, Any]:
             field_data = table_data[position : position + TABLE_FIELD_SIZE]
 
             field = {
-                "type": ncaadb.hex.read_dword(3, field_data),
-                "offset": ncaadb.hex.read_dword(7, field_data),
-                "name": ncaadb.hex.read_text(11, 4, field_data),
-                "bits": ncaadb.hex.read_dword(15, field_data),
+                "type": int.from_bytes(field_data[0:4]),
+                "offset": int.from_bytes(field_data[4:8]),
+                "name": field_data[8:12].decode()[::-1],
+                "bits": int.from_bytes(field_data[12:16]),
                 "records": [],
             }
 
