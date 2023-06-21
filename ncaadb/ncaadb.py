@@ -22,6 +22,12 @@ class FileHeader:
     unknown_2: int
 
 
+@dataclass
+class Table:
+    name: str
+    offset: int
+
+
 def read_db(db_file: BinaryIO) -> dict[str, Any]:
     """Read an NCAA DB file into python-readable data.
 
@@ -33,3 +39,10 @@ def read_db(db_file: BinaryIO) -> dict[str, Any]:
     """
     buffer = db_file.read(FILE_HEADER_SIZE)
     header = FileHeader(*struct.unpack(">HHIIIII", buffer))
+
+    tables = {}
+    for _ in range(header.table_count):
+        buffer = db_file.read(TABLE_DEFINITION_SIZE)
+        name, offset = struct.unpack(">4sI", buffer)
+        name = name.decode()[::-1]
+        tables[name] = Table(name, offset)
