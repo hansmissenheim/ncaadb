@@ -1,3 +1,4 @@
+import dataclasses
 import math
 import struct
 from dataclasses import dataclass
@@ -40,10 +41,23 @@ class TableHeader:
 
 
 @dataclass
+class Field:
+    type: int
+    offset: int
+    name: bytes | str
+    bits: int
+
+    def __post_init__(self):
+        if isinstance(self.name, bytes):
+            self.name = self.name.decode()[::-1]
+
+
+@dataclass
 class Table:
     name: str
     offset: int
     header: TableHeader | None = None
+    fields: list[Field] = dataclasses.field(default_factory=list)
 
 
 def read_db(db_file: BinaryIO) -> dict[str, Any]:
@@ -72,3 +86,8 @@ def read_db(db_file: BinaryIO) -> dict[str, Any]:
 
         buffer = db_file.read(TABLE_HEADER_SIZE)
         table.header = TableHeader(*struct.unpack(">IIIIIHHIBBHII", buffer))
+
+        for _ in range(table.header.num_fields):
+            buffer = db_file.read(TABLE_FIELD_SIZE)
+            field = Field(*struct.unpack(">II4sI", buffer))
+            table.fields.append(field)
