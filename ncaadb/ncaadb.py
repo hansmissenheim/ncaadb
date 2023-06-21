@@ -23,9 +23,27 @@ class FileHeader:
 
 
 @dataclass
+class TableHeader:
+    prior_crc: int
+    unknown_2: int
+    len_bytes: int
+    len_bits: int
+    zero: int
+    max_records: int
+    current_records: int
+    unknown_3: int
+    num_fields: int
+    index_count: int
+    zero_2: int
+    zero_3: int
+    header_crc: int
+
+
+@dataclass
 class Table:
     name: str
     offset: int
+    header: TableHeader | None = None
 
 
 def read_db(db_file: BinaryIO) -> dict[str, Any]:
@@ -46,3 +64,7 @@ def read_db(db_file: BinaryIO) -> dict[str, Any]:
         name, offset = struct.unpack(">4sI", buffer)
         name = name.decode()[::-1]
         tables[name] = Table(name, offset)
+
+    for name, table in tables.items():
+        buffer = db_file.read(TABLE_HEADER_SIZE)
+        table.header = TableHeader(*struct.unpack(">IIIIIHHIBBHII", buffer))
