@@ -65,6 +65,10 @@ def read_db(db_file: BinaryIO) -> dict[str, Any]:
         name = name.decode()[::-1]
         tables[name] = Table(name, offset)
 
+    header_start_byte = db_file.tell()
     for name, table in tables.items():
+        bytes_to_skip = (header_start_byte + table.offset) - db_file.tell()
+        db_file.read(bytes_to_skip)
+
         buffer = db_file.read(TABLE_HEADER_SIZE)
         table.header = TableHeader(*struct.unpack(">IIIIIHHIBBHII", buffer))
