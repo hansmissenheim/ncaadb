@@ -1,10 +1,7 @@
-def read_string(record_data: bytes, field: dict[str, int | str]):
-    string = ""
-    for i in range(field.get("bits") // 8):
-        b = record_data[(field.get("offset") // 8) + i]
-        if b != 0:
-            string += chr(b)
-    return string
+def read_string(data: bytes, bits: int, offset: int) -> str:
+    start_byte = offset // 8
+    end_byte = (offset + bits) // 8
+    return data[start_byte:end_byte].decode("latin-1").replace("\00", "")
 
 
 def read_bytes(record_data: bytes, field: dict[str, int | str]):
