@@ -1,5 +1,4 @@
 import dataclasses
-import math
 import struct
 from dataclasses import dataclass
 from typing import Any, BinaryIO
@@ -46,6 +45,7 @@ class Field:
     offset: int
     name: bytes | str
     bits: int
+    records: list = dataclasses.field(default_factory=list)
 
     def __post_init__(self):
         if isinstance(self.name, bytes):
@@ -91,3 +91,17 @@ def read_db(db_file: BinaryIO) -> dict[str, Any]:
             buffer = db_file.read(TABLE_FIELD_SIZE)
             field = Field(*struct.unpack(">II4sI", buffer))
             table.fields.append(field)
+
+        for _ in range(table.header.current_records):
+            buffer = db_file.read(table.header.len_bytes)
+
+            for field in table.fields:
+                if field.type == 0:
+                    value = ncaadb.hex.read_string(buffer, field.bits, field.offset)
+                elif field.type == 1:
+                    value = ncaadb.hex.read_bytes(buffer, field.bits, field.offset)
+                else:
+                    value = ncaadb.hex.read_nums(buffer, field.bits, field.offset)
+                field.records.append(value)
+
+    return tables
