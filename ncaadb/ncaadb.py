@@ -1,6 +1,7 @@
 import dataclasses
 import struct
 from dataclasses import dataclass
+from enum import IntEnum
 from typing import Any, BinaryIO
 
 import ncaadb.hex
@@ -50,6 +51,15 @@ class Field:
     def __post_init__(self):
         if isinstance(self.name, bytes):
             self.name = self.name.decode()[::-1]
+        self.type = FieldType(self.type)
+
+
+class FieldType(IntEnum):
+    STRING = 0
+    BINARY = 1
+    SINT = 2
+    UINT = 3
+    FLOAT = 4
 
 
 @dataclass
@@ -96,12 +106,13 @@ def read_db(db_file: BinaryIO) -> dict[str, Any]:
             buffer = db_file.read(table.header.len_bytes)
 
             for field in table.fields:
-                if field.type == 0:
-                    value = ncaadb.hex.read_string(buffer, field.bits, field.offset)
-                elif field.type == 1:
-                    value = ncaadb.hex.read_bytes(buffer, field.bits, field.offset)
-                else:
-                    value = ncaadb.hex.read_nums(buffer, field.bits, field.offset)
+                match field.type:
+                    case FieldType.STRING:
+                        value = ncaadb.hex.read_string(buffer, field.bits, field.offset)
+                    case FieldType.BINARY:
+                        value = ncaadb.hex.read_bytes(buffer, field.bits, field.offset)
+                    case _:
+                        value = ncaadb.hex.read_nums(buffer, field.bits, field.offset)
                 field.records.append(value)
 
     return tables
