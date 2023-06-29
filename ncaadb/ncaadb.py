@@ -102,17 +102,21 @@ def read_db(db_file: BinaryIO) -> dict[str, Any]:
             field = Field(*struct.unpack(">II4sI", buffer))
             table.fields.append(field)
 
+        records = []
         for _ in range(table.header.current_records):
             buffer = db_file.read(table.header.len_bytes)
+            records.append(buffer)
 
-            for field in table.fields:
-                match field.type:
-                    case FieldType.STRING:
-                        value = ncaadb.hex.read_string(buffer, field.bits, field.offset)
-                    case FieldType.BINARY:
-                        value = ncaadb.hex.read_bytes(buffer, field.bits, field.offset)
-                    case _:
-                        value = ncaadb.hex.read_nums(buffer, field.bits, field.offset)
-                field.records.append(value)
+        for field in table.fields:
+            match field.type:
+                case FieldType.STRING:
+                    func = ncaadb.hex.read_string
+                case FieldType.BINARY:
+                    func = ncaadb.hex.read_bytes
+                case _:
+                    func = ncaadb.hex.read_nums
+
+            for buffer in records:
+                field.records.append(func(buffer, field.bits, field.offset))
 
     return tables
