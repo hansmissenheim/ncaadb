@@ -5,6 +5,7 @@ from enum import IntEnum
 from typing import Any, BinaryIO
 
 import ncaadb.hex
+import pandas as pd
 
 FILE_HEADER_SIZE = 24
 TABLE_HEADER_SIZE = 40
@@ -46,7 +47,6 @@ class Field:
     offset: int
     name: bytes | str
     bits: int
-    records: list = dataclasses.field(default_factory=list)
 
     def __post_init__(self):
         if isinstance(self.name, bytes):
@@ -68,6 +68,7 @@ class Table:
     offset: int
     header: TableHeader | None = None
     fields: list[Field] = dataclasses.field(default_factory=list)
+    data: pd.DataFrame | None = None
 
 
 def read_db(db_file: BinaryIO) -> dict[str, Any]:
@@ -100,6 +101,13 @@ def read_db(db_file: BinaryIO) -> dict[str, Any]:
         for _ in range(table.header.num_fields):
             buffer = db_file.read(TABLE_FIELD_SIZE)
             field = Field(*struct.unpack(">II4sI", buffer))
+            match field.type:
+                case FieldType.STRING:
+                    field.read_func = ncaadb.hex.read_string
+                case FieldType.BINARY:
+                    field.read_func = ncaadb.hex.read_bytes
+                case _:
+                    field.read_func = ncaadb.hex.read_nums
             table.fields.append(field)
 
         records = []
@@ -107,16 +115,12 @@ def read_db(db_file: BinaryIO) -> dict[str, Any]:
             buffer = db_file.read(table.header.len_bytes)
             records.append(buffer)
 
-        for field in table.fields:
-            match field.type:
-                case FieldType.STRING:
-                    func = ncaadb.hex.read_string
-                case FieldType.BINARY:
-                    func = ncaadb.hex.read_bytes
-                case _:
-                    func = ncaadb.hex.read_nums
-
-            for buffer in records:
-                field.records.append(func(buffer, field.bits, field.offset))
-
+        data = []
+        columns = [field.name for field in table.fields]
+        for buffer in records:
+            record = []
+            for field in table.fields:
+                record.append(field.read_func(buffer, field.bits, field.offset))
+            data.append(record)
+        table.data = pd.DataFrame(data, columns=columns)
     return tables
