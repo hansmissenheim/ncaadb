@@ -48,7 +48,7 @@ class Field:
     name: bytes | str
     bits: int
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if isinstance(self.name, bytes):
             self.name = self.name.decode()[::-1]
         self.type = FieldType(self.type)
