@@ -1,3 +1,7 @@
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.poetry]
 name = "ncaadb"
 version = "0.1.0"
@@ -10,10 +14,9 @@ readme = "README.md"
 python = "^3.11"
 pandas = "^2.0.2"
 
-
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+ipykernel = "^6.29.0"
+ruff = "^0.1.13"
+mypy = "^1.8.0"
+pandas-stubs = "^2.1.4.231227"
