@@ -76,6 +76,16 @@ def read_file_header(db_file: BinaryIO) -> FileHeader:
     return FileHeader(*struct.unpack(">HHIIIII", buffer))
 
 
+def read_table_definitions(db_file: BinaryIO, table_count: int) -> dict[str, Table]:
+    tables = {}
+    for _ in range(table_count):
+        buffer = db_file.read(TABLE_DEFINITION_SIZE)
+        name, offset = struct.unpack(">4sI", buffer)
+        name = name.decode()[::-1]
+        tables[name] = Table(name, offset)
+    return tables
+
+
 def read_db(db_file: BinaryIO) -> dict[str, Any]:
     """Read an NCAA DB file into python-readable data.
 
@@ -86,13 +96,7 @@ def read_db(db_file: BinaryIO) -> dict[str, Any]:
         dict[str, Any]: Dictionary containing file headers and table data
     """
     file_header = read_file_header(db_file)
-
-    tables = {}
-    for _ in range(file_header.table_count):
-        buffer = db_file.read(TABLE_DEFINITION_SIZE)
-        name, offset = struct.unpack(">4sI", buffer)
-        name = name.decode()[::-1]
-        tables[name] = Table(name, offset)
+    tables = read_table_definitions(db_file, file_header.table_count)
 
     header_start_byte = db_file.tell()
     for name, table in tables.items():
