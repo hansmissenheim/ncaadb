@@ -86,6 +86,20 @@ def read_table_definitions(db_file: BinaryIO, table_count: int) -> dict[str, Tab
     return tables
 
 
+def read_table_fields(db_file: BinaryIO, table: Table) -> None:
+    for _ in range(table.header.num_fields):
+        buffer = db_file.read(TABLE_FIELD_SIZE)
+        field = Field(*struct.unpack(">II4sI", buffer))
+        match field.type:
+            case FieldType.STRING:
+                field.read_func = ncaadb.hex.read_string
+            case FieldType.BINARY:
+                field.read_func = ncaadb.hex.read_bytes
+            case _:
+                field.read_func = ncaadb.hex.read_nums
+        table.fields.append(field)
+
+
 def read_db(db_file: BinaryIO) -> dict[str, Any]:
     """Read an NCAA DB file into python-readable data.
 
@@ -105,18 +119,7 @@ def read_db(db_file: BinaryIO) -> dict[str, Any]:
 
         buffer = db_file.read(TABLE_HEADER_SIZE)
         table.header = TableHeader(*struct.unpack(">IIIIIHHIBBHII", buffer))
-
-        for _ in range(table.header.num_fields):
-            buffer = db_file.read(TABLE_FIELD_SIZE)
-            field = Field(*struct.unpack(">II4sI", buffer))
-            match field.type:
-                case FieldType.STRING:
-                    field.read_func = ncaadb.hex.read_string
-                case FieldType.BINARY:
-                    field.read_func = ncaadb.hex.read_bytes
-                case _:
-                    field.read_func = ncaadb.hex.read_nums
-            table.fields.append(field)
+        read_table_fields(db_file, table)
 
         records = []
         for _ in range(table.header.current_records):
