@@ -100,6 +100,22 @@ def read_table_fields(db_file: BinaryIO, table: Table) -> None:
         table.fields.append(field)
 
 
+def read_table_records(db_file: BinaryIO, table: Table) -> None:
+    records = []
+    for _ in range(table.header.current_records):
+        buffer = db_file.read(table.header.len_bytes)
+        records.append(buffer)
+
+    data = []
+    columns = [field.name for field in table.fields]
+    for buffer in records:
+        record = []
+        for field in table.fields:
+            record.append(field.read_func(buffer, field.bits, field.offset))
+        data.append(record)
+    table.data = pd.DataFrame(data, columns=columns)
+
+
 def read_db(db_file: BinaryIO) -> dict[str, Any]:
     """Read an NCAA DB file into python-readable data.
 
@@ -120,18 +136,6 @@ def read_db(db_file: BinaryIO) -> dict[str, Any]:
         buffer = db_file.read(TABLE_HEADER_SIZE)
         table.header = TableHeader(*struct.unpack(">IIIIIHHIBBHII", buffer))
         read_table_fields(db_file, table)
+        read_table_records(db_file, table)
 
-        records = []
-        for _ in range(table.header.current_records):
-            buffer = db_file.read(table.header.len_bytes)
-            records.append(buffer)
-
-        data = []
-        columns = [field.name for field in table.fields]
-        for buffer in records:
-            record = []
-            for field in table.fields:
-                record.append(field.read_func(buffer, field.bits, field.offset))
-            data.append(record)
-        table.data = pd.DataFrame(data, columns=columns)
     return tables
