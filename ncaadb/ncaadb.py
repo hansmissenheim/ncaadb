@@ -71,6 +71,11 @@ class Table:
     data: pd.DataFrame | None = None
 
 
+def read_file_header(db_file: BinaryIO) -> FileHeader:
+    buffer = db_file.read(FILE_HEADER_SIZE)
+    return FileHeader(*struct.unpack(">HHIIIII", buffer))
+
+
 def read_db(db_file: BinaryIO) -> dict[str, Any]:
     """Read an NCAA DB file into python-readable data.
 
@@ -80,11 +85,10 @@ def read_db(db_file: BinaryIO) -> dict[str, Any]:
     Returns:
         dict[str, Any]: Dictionary containing file headers and table data
     """
-    buffer = db_file.read(FILE_HEADER_SIZE)
-    header = FileHeader(*struct.unpack(">HHIIIII", buffer))
+    file_header = read_file_header(db_file)
 
     tables = {}
-    for _ in range(header.table_count):
+    for _ in range(file_header.table_count):
         buffer = db_file.read(TABLE_DEFINITION_SIZE)
         name, offset = struct.unpack(">4sI", buffer)
         name = name.decode()[::-1]
