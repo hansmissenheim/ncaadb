@@ -116,6 +116,18 @@ def read_table_records(db_file: BinaryIO, table: Table) -> None:
     table.data = pd.DataFrame(data, columns=columns)
 
 
+def read_table_data(db_file: BinaryIO, tables: dict[str, Table]) -> None:
+    header_start_byte = db_file.tell()
+    for table in tables.values():
+        bytes_to_skip = (header_start_byte + table.offset) - db_file.tell()
+        db_file.read(bytes_to_skip)
+
+        buffer = db_file.read(TABLE_HEADER_SIZE)
+        table.header = TableHeader(*struct.unpack(">IIIIIHHIBBHII", buffer))
+        read_table_fields(db_file, table)
+        read_table_records(db_file, table)
+
+
 def read_db(db_file: BinaryIO) -> dict[str, Any]:
     """Read an NCAA DB file into python-readable data.
 
@@ -127,15 +139,5 @@ def read_db(db_file: BinaryIO) -> dict[str, Any]:
     """
     file_header = read_file_header(db_file)
     tables = read_table_definitions(db_file, file_header.table_count)
-
-    header_start_byte = db_file.tell()
-    for name, table in tables.items():
-        bytes_to_skip = (header_start_byte + table.offset) - db_file.tell()
-        db_file.read(bytes_to_skip)
-
-        buffer = db_file.read(TABLE_HEADER_SIZE)
-        table.header = TableHeader(*struct.unpack(">IIIIIHHIBBHII", buffer))
-        read_table_fields(db_file, table)
-        read_table_records(db_file, table)
-
+    read_table_data(db_file, tables)
     return tables
