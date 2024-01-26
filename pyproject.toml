@@ -27,3 +27,7 @@ select = ["ALL"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
+
+[tool.ruff.per-file-ignores]
+# Ruff linting rules that should be exluded for tests
+"tests/**/*.py" = ["D", "S101"]
