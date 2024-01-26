@@ -20,3 +20,9 @@ ipykernel = "^6.29.0"
 ruff = "^0.1.13"
 mypy = "^1.8.0"
 pandas-stubs = "^2.1.4.231227"
+
+[tool.ruff.lint]
+select = ["ALL"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
