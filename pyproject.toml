@@ -22,6 +22,9 @@ mypy = "^1.8.0"
 pandas-stubs = "^2.1.4.231227"
 pytest = "^7.4.4"
 
+[tool.ruff]
+target-version = "py311"
+
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = ["ANN101"]
