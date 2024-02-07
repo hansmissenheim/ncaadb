@@ -71,6 +71,12 @@ class Table:
     data: pd.DataFrame | None = None
 
 
+@dataclass
+class File:
+    header: FileHeader
+    table_dict: dict[str, Table] = dataclasses.field(default_factory=dict)
+
+
 def read_file_header(db_file: BinaryIO) -> FileHeader:
     buffer = db_file.read(FILE_HEADER_SIZE)
     return FileHeader(*struct.unpack(">HHIIIII", buffer))
