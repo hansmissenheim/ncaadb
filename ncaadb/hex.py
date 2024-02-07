@@ -8,18 +8,51 @@ and column's record.
 
 
 def read_string(data: bytes, bits: int, offset: int) -> str:
+    """Reads tabular record data into a string.
+
+    The strings saved in the hex record data uses blank bits that must be replaced with
+    empty strings when decoded in order to maintain proper representation.
+
+    Args:
+        data (bytes): A tabular data row's hex record data
+        bits (int): The field's data length in bits
+        offset (int): The field's data offset to the start in record data
+
+    Returns:
+        str: String representation of the row's field-specefic record
+    """
     start_byte = offset // 8
     end_byte = (offset + bits) // 8
     return data[start_byte:end_byte].decode("latin-1").replace("\00", "")
 
 
 def read_bytes(data: bytes, bits: int, offset: int) -> str:
+    """Reads tabular record data into a string represenation of hex bytes.
+
+    Args:
+        data (bytes): A tabular data row's hex record data
+        bits (int): The field's data length in bits
+        offset (int): The field's data offset to the start in record data
+
+    Returns:
+        str: _description_
+    """
     start_byte = offset // 8
     end_byte = (offset + bits) // 8
     return data[start_byte:end_byte].hex()
 
 
 def read_nums(data: bytes, bits: int, offset: int) -> int:
+    """Reads tabular record data into an integer.
+
+    Args:
+        data (bytes): A tabular data row's hex record data
+        bits (int): The field's data length in bits
+        offset (int): The field's data offset to the start in record data
+
+    Returns:
+        int: Integer representation of the row's field-specefic record
+    """
     byte_offset = offset // 8
     bit_offset = offset % 8
     value = 0
