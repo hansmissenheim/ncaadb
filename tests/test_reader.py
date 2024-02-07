@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ncaadb import read_db
+import ncaadb
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -33,9 +33,11 @@ def test_read_db(usr_data_file: str, hashed_json_file: str) -> None:
         hashed_json = json.load(file)
 
     with Path(f"tests/test_reader/{usr_data_file}").open("rb") as file:
-        usr_data = read_db(file)
+        db_file = ncaadb.read_db(file)
 
-    hashed_data = {table.name: _hash_tables(table.data) for table in usr_data.values()}
+    hashed_data = {
+        table.name: _hash_tables(table.data) for table in db_file.table_dict.values()
+    }
 
     for data_hash, json_hash in zip(hashed_data.values(), hashed_json.values()):
         assert data_hash == json_hash
