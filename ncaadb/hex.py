@@ -23,7 +23,7 @@ def read_nums(data: bytes, bits: int, offset: int) -> int:
     byte_offset = offset // 8
     bit_offset = offset % 8
     value = 0
-    for i in range(bits):
+    for _ in range(bits):
         value <<= 1
         value |= (data[byte_offset] >> (7 - bit_offset)) & 1
         bit_offset += 1
