@@ -74,7 +74,7 @@ class Table:
 @dataclass
 class File:
     header: FileHeader
-    table_dict: dict[str, Table] = dataclasses.field(default_factory=dict)
+    table_dict: dict[str, Table]
 
 
 def read_file_header(db_file: BinaryIO) -> FileHeader:
@@ -134,16 +134,18 @@ def read_table_data(db_file: BinaryIO, tables: dict[str, Table]) -> None:
         read_table_records(db_file, table)
 
 
-def read_db(db_file: BinaryIO) -> dict[str, Any]:
+def read_db(db_file: BinaryIO) -> File:
     """Read an NCAA DB file into python-readable data.
 
     Args:
-        db_file (BinaryIO): NCAA DB file
+        db_file (BinaryIO): Open file stream to NCAA DB file
 
     Returns:
-        dict[str, Any]: Dictionary containing file headers and table data
+        File: NCAA DB File object containing header info and table data
     """
     file_header = read_file_header(db_file)
-    tables = read_table_definitions(db_file, file_header.table_count)
-    read_table_data(db_file, tables)
-    return tables
+    table_dict = read_table_definitions(db_file, file_header.table_count)
+    file = File(file_header, table_dict)
+
+    read_table_data(db_file, file.table_dict)
+    return file
