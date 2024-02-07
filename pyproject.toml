@@ -24,6 +24,7 @@ pytest = "^7.4.4"
 
 [tool.ruff.lint]
 select = ["ALL"]
+ignore = ["ANN101"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
