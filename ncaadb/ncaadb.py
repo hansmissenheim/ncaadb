@@ -2,7 +2,7 @@ import dataclasses
 import struct
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Any, BinaryIO
+from typing import BinaryIO
 
 import pandas as pd
 
