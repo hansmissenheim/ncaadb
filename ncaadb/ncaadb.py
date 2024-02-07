@@ -79,6 +79,9 @@ class File:
     def __getitem__(self, table_name: str) -> pd.DataFrame | None:
         return self.table_dict[table_name].data
 
+    def __setitem__(self, table_name: str, table_data: pd.DataFrame) -> None:
+        self.table_dict[table_name].data = table_data
+
 
 def read_file_header(db_file: BinaryIO) -> FileHeader:
     buffer = db_file.read(FILE_HEADER_SIZE)
