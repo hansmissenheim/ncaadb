@@ -4,8 +4,9 @@ from dataclasses import dataclass
 from enum import IntEnum
 from typing import Any, BinaryIO
 
-import ncaadb.hex
 import pandas as pd
+
+import ncaadb.hex
 
 FILE_HEADER_SIZE = 24
 TABLE_HEADER_SIZE = 40
