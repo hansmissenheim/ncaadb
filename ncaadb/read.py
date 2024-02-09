@@ -1,10 +1,9 @@
-"""The core classes and functions used for reading Ncaa DB Files.
+"""The functions used for reading ncaa db files.
 
-The classes within this module includes `File` representing the Ncaa Db File, along with
-classes for each part comprising the file. This `File` class is what is returned when
-reading an Ncaa DB File with the `read_db()` function. This function is used to read an
-Ncaa DB File from an opened `BinaryIO` stream, and return each database table as a
-`pandas.Dataframe`, which can then be modified as neccessary.
+The core function of this module, `read_db()`, is the main method for allowing users to
+open an ncaa db file. The function takes an opened `BinaryIO` stream and returns a
+`File` class object containing file header information and the db's total tabular
+data.
 
 Usage example:
 
