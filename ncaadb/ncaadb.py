@@ -23,11 +23,12 @@ from typing import BinaryIO
 import pandas as pd
 
 import ncaadb.hex
-
-FILE_HEADER_SIZE = 24
-TABLE_HEADER_SIZE = 40
-TABLE_DEFINITION_SIZE = 8
-TABLE_FIELD_SIZE = 16
+from ncaadb.const import (
+    FILE_HEADER_SIZE,
+    TABLE_DEFINITION_SIZE,
+    TABLE_FIELD_SIZE,
+    TABLE_HEADER_SIZE,
+)
 
 
 @dataclass
