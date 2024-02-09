@@ -28,6 +28,10 @@ from ncaadb.const import (
 from ncaadb.file import Field, FieldType, File, FileHeader, Table, TableHeader
 
 
+class MissingHeaderError(Exception):
+    """Exception raised when trying to access a missing header attribute."""
+
+
 def read_file_header(db_file: BinaryIO) -> FileHeader:
     buffer = db_file.read(FILE_HEADER_SIZE)
     return FileHeader(*struct.unpack(">HHIIIII", buffer))
@@ -44,6 +48,9 @@ def read_table_definitions(db_file: BinaryIO, table_count: int) -> dict[str, Tab
 
 
 def read_table_fields(db_file: BinaryIO, table: Table) -> None:
+    if table.header is None:
+        raise MissingHeaderError
+
     for _ in range(table.header.num_fields):
         buffer = db_file.read(TABLE_FIELD_SIZE)
         field = Field(*struct.unpack(">II4sI", buffer))
@@ -58,6 +65,9 @@ def read_table_fields(db_file: BinaryIO, table: Table) -> None:
 
 
 def read_table_records(db_file: BinaryIO, table: Table) -> None:
+    if table.header is None:
+        raise MissingHeaderError
+
     records = []
     for _ in range(table.header.current_records):
         buffer = db_file.read(table.header.len_bytes)
