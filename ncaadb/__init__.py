@@ -1,3 +1,3 @@
 """Init file for ncaadb."""
 
-from .ncaadb import read_db
+from .read import read_db
