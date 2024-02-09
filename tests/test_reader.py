@@ -39,5 +39,9 @@ def test_read_db(usr_data_file: str, hashed_json_file: str) -> None:
         table.name: _hash_tables(table.data) for table in db_file.table_dict.values()
     }
 
-    for data_hash, json_hash in zip(hashed_data.values(), hashed_json.values()):
+    for data_hash, json_hash in zip(
+        hashed_data.values(),
+        hashed_json.values(),
+        strict=True,
+    ):
         assert data_hash == json_hash
