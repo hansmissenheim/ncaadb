@@ -1,9 +1,12 @@
 """The classes comprising the Ncaa DB File representation as `File`."""
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import IntEnum
 
 import pandas as pd
+
+import ncaadb.hex
 
 
 class FieldType(IntEnum):
@@ -24,12 +27,21 @@ class Field:
     offset: int
     name: bytes | str
     bits: int
+    read_func: Callable[[bytes, int, int], int | str] | None = None
 
     def __post_init__(self) -> None:
         """Post init method to decode the name and convert the type to FieldType."""
         if isinstance(self.name, bytes):
             self.name = self.name.decode()[::-1]
+
         self.type = FieldType(self.type)
+        match self.type:
+            case FieldType.STRING:
+                self.read_func = ncaadb.hex.read_string
+            case FieldType.BINARY:
+                self.read_func = ncaadb.hex.read_bytes
+            case _:
+                self.read_func = ncaadb.hex.read_nums
 
 
 @dataclass

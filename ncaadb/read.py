@@ -18,14 +18,13 @@ from typing import BinaryIO
 
 import pandas as pd
 
-import ncaadb.hex
 from ncaadb.const import (
     FILE_HEADER_SIZE,
     TABLE_DEFINITION_SIZE,
     TABLE_FIELD_SIZE,
     TABLE_HEADER_SIZE,
 )
-from ncaadb.file import Field, FieldType, File, FileHeader, Table, TableHeader
+from ncaadb.file import Field, File, FileHeader, Table, TableHeader
 
 
 class MissingHeaderError(Exception):
@@ -80,13 +79,6 @@ def read_table_fields(db_file: BinaryIO, table: Table) -> None:
     for _ in range(table.header.num_fields):
         buffer = db_file.read(TABLE_FIELD_SIZE)
         field = Field(*struct.unpack(">II4sI", buffer))
-        match field.type:
-            case FieldType.STRING:
-                field.read_func = ncaadb.hex.read_string
-            case FieldType.BINARY:
-                field.read_func = ncaadb.hex.read_bytes
-            case _:
-                field.read_func = ncaadb.hex.read_nums
         table.fields.append(field)
 
 
