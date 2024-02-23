@@ -36,7 +36,9 @@ def test_read_db(usr_data_file: str, hashed_json_file: str) -> None:
         db_file = ncaadb.read_db(file)
 
     hashed_data = {
-        table.name: _hash_tables(table.data) for table in db_file.table_dict.values()
+        table.name: _hash_tables(table.data)
+        for table in db_file.table_dict.values()
+        if table.data is not None
     }
 
     for data_hash, json_hash in zip(
