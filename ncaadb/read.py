@@ -33,11 +33,28 @@ class MissingHeaderError(Exception):
 
 
 def read_file_header(db_file: BinaryIO) -> FileHeader:
+    """Reads the file header from the db file and returns it as a FileHeader object.
+
+    Args:
+        db_file (BinaryIO): Open file stream to NCAA DB file
+
+    Returns:
+        FileHeader: FileHeader object containing file header information
+    """
     buffer = db_file.read(FILE_HEADER_SIZE)
     return FileHeader(*struct.unpack(">HHIIIII", buffer))
 
 
 def read_table_definitions(db_file: BinaryIO, table_count: int) -> dict[str, Table]:
+    """Reads the table definitions from the db file and stores it in a dict.
+
+    Args:
+        db_file (BinaryIO): Open file stream to NCAA DB file
+        table_count (int): Number of tables in the db file
+
+    Returns:
+        dict[str, Table]: Dict mapping table name to table object
+    """
     tables = {}
     for _ in range(table_count):
         buffer = db_file.read(TABLE_DEFINITION_SIZE)
@@ -48,6 +65,15 @@ def read_table_definitions(db_file: BinaryIO, table_count: int) -> dict[str, Tab
 
 
 def read_table_fields(db_file: BinaryIO, table: Table) -> None:
+    """Reads the table fields from the db file and stores it in the table object.
+
+    Args:
+        db_file (BinaryIO): Open file stream to NCAA DB file
+        table (Table): Table object to store the records in
+
+    Raises:
+        MissingHeaderError: Raised when trying to read from table without header
+    """
     if table.header is None:
         raise MissingHeaderError
 
@@ -65,6 +91,15 @@ def read_table_fields(db_file: BinaryIO, table: Table) -> None:
 
 
 def read_table_records(db_file: BinaryIO, table: Table) -> None:
+    """Reads the table records from the db file and stores it in the table object.
+
+    Args:
+        db_file (BinaryIO): Open file stream to NCAA DB file
+        table (Table): Table object to store the records in
+
+    Raises:
+        MissingHeaderError: Raised when trying to read from table without header
+    """
     if table.header is None:
         raise MissingHeaderError
 
@@ -84,6 +119,12 @@ def read_table_records(db_file: BinaryIO, table: Table) -> None:
 
 
 def read_table_data(db_file: BinaryIO, tables: dict[str, Table]) -> None:
+    """Reads the table data from the db file and stores it in the table object.
+
+    Args:
+        db_file (BinaryIO): Open file stream to NCAA DB file
+        tables (dict[str, Table]): Dict mapping table name to table object
+    """
     header_start_byte = db_file.tell()
     for table in tables.values():
         bytes_to_skip = (header_start_byte + table.offset) - db_file.tell()
