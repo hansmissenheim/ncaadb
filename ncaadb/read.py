@@ -100,13 +100,15 @@ def read_table_records(db_file: BinaryIO, table: Table) -> None:
         buffer = db_file.read(table.header.len_bytes)
         records.append(buffer)
 
-    data = []
     columns = [field.name for field in table.fields]
-    for buffer in records:
-        record = []
-        for field in table.fields:
-            record.append(field.read_func(buffer, field.bits, field.offset))
-        data.append(record)
+    data = [
+        [
+            field.read_func(buffer, field.bits, field.offset)
+            for field in table.fields
+            if callable(field.read_func)
+        ]
+        for buffer in records
+    ]
     table.data = pd.DataFrame(data, columns=columns)
 
 
