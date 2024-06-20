@@ -94,9 +94,18 @@ class NcaaDbFile:
     header: FileHeader
     table_dict: dict[str, Table]
 
-    def __getitem__(self, table_name: str) -> pd.DataFrame | None:
+    def __getitem__(self, table_name: str) -> pd.DataFrame:
         """Get the table data from the table name."""
-        return self.table_dict[table_name].data
+        if table_name not in self.table_dict:
+            missing_table_message = f"Table '{table_name}' not found in file"
+            raise KeyError(missing_table_message)
+
+        data = self.table_dict[table_name].data
+        if data is None:
+            missing_data_message = f"Table '{table_name}' has no data"
+            raise ValueError(missing_data_message)
+
+        return data
 
     def __setitem__(self, table_name: str, table_data: pd.DataFrame) -> None:
         """Set the table data for the table name.
