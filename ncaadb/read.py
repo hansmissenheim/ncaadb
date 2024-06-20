@@ -2,7 +2,7 @@
 
 The core function of this module, `read_db()`, is the main method for allowing users to
 open an ncaa db file. The function takes an opened `BinaryIO` stream and returns a
-`File` class object containing file header information and the db's total tabular
+`NcaaDbFile` class object containing file header information and the db's total tabular
 data.
 
 Usage example:
@@ -24,7 +24,7 @@ from ncaadb.const import (
     TABLE_FIELD_SIZE,
     TABLE_HEADER_SIZE,
 )
-from ncaadb.file import Field, File, FileHeader, Table, TableHeader
+from ncaadb.file import Field, FileHeader, NcaaDbFile, Table, TableHeader
 
 
 class MissingHeaderError(Exception):
@@ -130,18 +130,18 @@ def read_table_data(db_file: BinaryIO, tables: dict[str, Table]) -> None:
         read_table_records(db_file, table)
 
 
-def read_db(db_file: BinaryIO) -> File:
+def read_db(db_file: BinaryIO) -> NcaaDbFile:
     """Read an NCAA DB file into python-readable data.
 
     Args:
         db_file (BinaryIO): Open file stream to NCAA DB file
 
     Returns:
-        File: NCAA DB File object containing header info and table data
+        NcaaDbFile: NCAA DB File object containing header info and table data
     """
     file_header = read_file_header(db_file)
     table_dict = read_table_definitions(db_file, file_header.table_count)
-    file = File(file_header, table_dict)
+    file = NcaaDbFile(file_header, table_dict)
 
     read_table_data(db_file, file.table_dict)
     return file
