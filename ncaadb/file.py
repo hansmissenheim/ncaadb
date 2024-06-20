@@ -88,7 +88,7 @@ class FileHeader:
 
 
 @dataclass
-class File:
+class NcaaDbFile:
     """Class to represent the Ncaa DB File."""
 
     header: FileHeader
